@@ -34,11 +34,11 @@ conda --version
 ### 3. Clone the Repository
 In a terminal or command prompt, navigate to the folder where you want the project and run:
 ```
-git clone https://github.com/electronics10/Topology_Optimization.git
+git clone https://github.com/electronics10/adjoint-antenna-optimization.git
 ```
 Then, enter the project directory:
 ```
-cd Topology_Optimization
+cd adjoint-antenna-optimization
 ```
 
 ### 4. Set Up the Conda Environment
