@@ -5,6 +5,32 @@ This is a python implementation for antenna design automation. The program will 
 **Reference:** Topology Optimization of Metallic Antennas.” _IEEE Transactions on Antennas and Propagation_ 62, no. 5 (May 2014): 2488–2500. [https://doi.org/10.1109/TAP.2014.2309112](https://doi.org/10.1109/TAP.2014.2309112).
 
 ---
+
+## Issues and Caveats
+
+This code accompanies Chapter 5 of my master's thesis (NTU, 2025, doi:10.6342/NTU202501972). A review in Nov 2026 found the issues below. They have not been fixed yet. Please read them before reusing the code or citing the results.
+
+### Method vs. description
+
+- This is not SIMP. Conductivity is mapped as sigma = 10**(7.76*p) (range 1 to 5.75e7 S/m, not 0 to 5.8e7), and there is no penalization power law.
+- The chain rule d(sigma)/dp is left out: the update applies dW/d(sigma) directly to p (see the commented-out code in gradient_ascent). The update direction is therefore not the true gradient with respect to p.
+- With Adam and alpha = 1, the first step is exactly +1 or -1 for every pixel (m_hat/sqrt(v_hat) = sign(g)). The design becomes binary right away, so in practice this is close to sign-based steps, not smooth gradient ascent.
+
+### Objective and stopping
+
+- The "received power" is the integral of |v(t)| dt of the port signal (amplitude, not energy). It is not the energy that the adjoint formula is derived for.
+- The run stops when this value has stayed at 10x its initial value for 5 iterations. That is a threshold relative to the starting design, not convergence.
+- In the thesis, the 18 x 18 result only reaches about -4.8 dB at 1.5 GHz (Fig. 5.9), so it does not meet the -6 dB goal. The 4 x 4 result reaches only about -7 dB in a very narrow band.
+
+### Code bugs and risks
+
+- `start_simulate` swallows all exceptions. If CST fails, the code silently continues with field files from the previous run.
+- If the forward and adjoint field records differ in length, both are truncated before the time reversal. This shifts the reversal time T and misaligns the two fields.
+- After break, the message "Problem unsolvable" is still printed (discriminant <= 5 should be < 5).
+- Pixels below 9000 S/m use CST's "Normal" (volume) material, while pixels above use "Lossy metal" (surface impedance). Inside lossy-metal pixels the field is not computed in the same way, so their gradient may be unreliable. Adam's normalization turns even small, noisy gradients into full-size steps.
+
+---
+
 ## Setup
 Before running the code, ensure you have the following installed:
 - **CST Studio Suite®**: To solve EM problems. Official interface only support python 3.6~3.9.
